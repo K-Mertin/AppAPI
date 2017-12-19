@@ -11,7 +11,7 @@ using System;
 namespace DatingApp.API.Controllers
 {
     [Authorize]
-    [Route ("api/[controller]")]
+    [Route("api/[controller]")]
     public class UsersController : Controller
     {
         private readonly IDatingRepository _repo;
@@ -43,25 +43,25 @@ namespace DatingApp.API.Controllers
             return Ok(userToReturn);
         }
 
-        [HttpPut("{id}")]
+        [HttpPut("{id}", Name = "GetUser")]
         public async Task<IActionResult> UpdateUser(int id, [FromBody] UserForUpdateDto userForUpdateDto)
         {
-            if(!ModelState.IsValid)
+            if (!ModelState.IsValid)
                 return BadRequest(ModelState);
 
             var currentUserId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier).Value);
 
             var userFromRepo = await _repo.GetUser(id);
 
-            if(userFromRepo == null)
+            if (userFromRepo == null)
                 return NotFound($"Could not find user with an ID of {id}");
 
-            if(currentUserId != userFromRepo.Id)
+            if (currentUserId != userFromRepo.Id)
                 return Unauthorized();
 
             _mapper.Map(userForUpdateDto, userFromRepo);
 
-            if(await _repo.SaveAll())
+            if (await _repo.SaveAll())
                 return NoContent();
 
             throw new Exception($"Updating user {id} failed on save");
