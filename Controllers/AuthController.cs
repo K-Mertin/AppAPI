@@ -9,6 +9,7 @@ using Microsoft.IdentityModel.Tokens;
 using System.Security.Claims;
 using System;
 using Microsoft.Extensions.Configuration;
+using AutoMapper;
 
 namespace DatingApp.API.Controllers
 {
@@ -16,22 +17,24 @@ namespace DatingApp.API.Controllers
     public class AuthController : Controller
     {
         private readonly IAuthRepository _repo;
+        private readonly IMapper _mapper;
         private readonly IConfiguration _config;
 
-        public AuthController(IAuthRepository repo, IConfiguration config )
+        public AuthController(IAuthRepository repo, IMapper mapper, IConfiguration config)
         {
             _repo = repo;
+            _mapper = mapper;
             _config = config;
         }
 
         [HttpPost("register")]
         public async Task<IActionResult> Register([FromBody]UserForRegisterDto userFroRegisterDto)
         {
-            if(!string.IsNullOrEmpty(userFroRegisterDto.Username))
+            if (!string.IsNullOrEmpty(userFroRegisterDto.Username))
                 userFroRegisterDto.Username = userFroRegisterDto.Username.ToLower();
 
             if (await _repo.UserExists(userFroRegisterDto.Username))
-                ModelState.AddModelError("Username","Username already exists");
+                ModelState.AddModelError("Username", "Username already exists");
 
             //validate request
             if (!ModelState.IsValid)
@@ -72,7 +75,9 @@ namespace DatingApp.API.Controllers
             var token = tokenHandler.CreateToken(tokenDescriptor);
             var tokenString = tokenHandler.WriteToken(token);
 
-            return Ok(new {tokenString});
+            var user = _mapper.Map<UserForListDto>(userFromRepo);
+
+            return Ok(new { tokenString, user });
         }
     }
 }
